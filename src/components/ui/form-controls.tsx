@@ -11,7 +11,25 @@ export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttribute
   return <input ref={ref} className={cn(fieldBase, "h-11", className)} {...props} />;
 });
 
-export const Textarea = React.forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttributes<HTMLTextAreaElement>>(function Textarea(
+/**
+ * Input with a fixed prefix (e.g. "GH₵"). All props — including the id and
+ * aria attributes that <Field> injects — go to the input itself, so the label
+ * stays connected.
+ */
+export const PrefixedInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement> & { prefix: string }>(
+  function PrefixedInput({ prefix, className, ...props }, ref) {
+    return (
+      <div className="relative">
+        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted" aria-hidden="true">
+          {prefix}
+        </span>
+        <input ref={ref} className={cn(fieldBase, "h-11 pl-12", className)} {...props} />
+      </div>
+    );
+  },
+);
+
+export const Textarea =React.forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttributes<HTMLTextAreaElement>>(function Textarea(
   { className, ...props },
   ref,
 ) {

@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Check, CircleCheck, Clock, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Field, Input, Select, Textarea } from "@/components/ui/form-controls";
+import { Field, Input, PrefixedInput, Select, Textarea } from "@/components/ui/form-controls";
 import { Alert, Badge, Card } from "@/components/ui/display";
 import { Checkbox, Switch } from "@/components/ui/primitives";
 import { PhotoManager, type SavedImage } from "./photo-manager";
@@ -603,18 +603,7 @@ export function SellWizard({
           {step === 3 ? (
             <>
               <Field id="price" label="Asking price (GH₵)" required error={err("price")}>
-                <div className="relative">
-                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted">GH₵</span>
-                  <Input
-                    id="price"
-                    className="pl-12"
-                    inputMode="decimal"
-                    value={values.pricing.price}
-                    onChange={(e) => set("pricing", { price: e.target.value })}
-                    placeholder="8,500"
-                    aria-invalid={err("price") ? true : undefined}
-                  />
-                </div>
+                <PrefixedInput prefix="GH₵" inputMode="decimal" value={values.pricing.price} onChange={(e) => set("pricing", { price: e.target.value })} placeholder="8,500" />
               </Field>
               <ToggleRow id="negotiable" label="Price is negotiable" description="Buyers can offer less than your asking price." checked={values.pricing.isNegotiable} onChange={(v) => set("pricing", { isNegotiable: v })} />
               <ToggleRow id="forSale" label="Available to buy" description="Accept purchase offers in cash." checked={values.pricing.availableForSale} onChange={(v) => set("pricing", { availableForSale: v })} />
