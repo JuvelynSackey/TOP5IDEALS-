@@ -57,13 +57,16 @@ update public.profiles set role = 'moderator' where username = 'some_moderator';
 
 Roles can only be changed by a database operator — never through the app.
 
-## 7. Scheduled jobs (recommended)
+## 7. Scheduled jobs
 
-Offers expire lazily (accept/counter refuse expired offers) and dashboards sweep overdue offers when loaded. For timely notifications enable `pg_cron` (**Database → Extensions**) and schedule:
+Migration `1000` enables `pg_cron` (available on Supabase) and registers:
 
-```sql
-select cron.schedule('top5-expire-offers', '*/15 * * * *', $$ select public.expire_due_offers(); $$);
-```
+| Job | Schedule | Purpose |
+| --- | --- | --- |
+| `top5-expire-offers` | every 15 min | `public.expire_due_offers()` — expires overdue offers and notifies both parties |
+| `top5-prune-rate-limits` | daily 03:17 UTC | deletes rate-limit events older than 2 days |
+
+Verify after `db push` with `select jobname, schedule, active from cron.job;` and inspect runs in `cron.job_run_details`. If `pg_cron` is unavailable the migration logs a notice and offers still expire lazily (accept/counter refuse expired offers; dashboards sweep overdue offers on load).
 
 ## 8. Vercel
 
@@ -91,7 +94,7 @@ With the local stack, `npx supabase db reset` re-applies migrations and seeds th
 - [ ] Seed run; brands/models visible in `/admin/models`
 - [ ] Site URL, redirect URLs, email templates and SMTP configured
 - [ ] First admin assigned; test moderation end-to-end
-- [ ] `pg_cron` expiry job scheduled
+- [ ] `select * from cron.job` shows both Top5Ideals jobs
 - [ ] Legal pages (`/terms`, `/privacy`) replaced with reviewed text
 - [ ] Custom domain + HTTPS; `NEXT_PUBLIC_SITE_URL` set
 

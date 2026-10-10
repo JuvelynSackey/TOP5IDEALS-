@@ -3,9 +3,9 @@
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({ children, nonce }: { children: React.ReactNode; nonce?: string }) {
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange storageKey="top5-theme">
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange storageKey="top5-theme" nonce={nonce}>
       {children}
       <Toaster
         position="top-center"

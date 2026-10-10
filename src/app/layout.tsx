@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import { Suspense } from "react";
+import { headers } from "next/headers";
 import "./globals.css";
 import { Providers } from "@/components/layout/providers";
 import { SiteHeader } from "@/components/layout/site-header";
@@ -39,11 +40,12 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   return (
     <html lang="en-GH" suppressHydrationWarning className={`${body.variable} ${heading.variable}`}>
       <body className="min-h-dvh">
-        <Providers>
+        <Providers nonce={nonce}>
           <Suspense fallback={<div className="h-14 border-b border-border sm:h-16" />}>
             <SiteHeader />
           </Suspense>

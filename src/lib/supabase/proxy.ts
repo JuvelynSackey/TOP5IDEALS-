@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "./database.types";
+import { buildCsp, createNonce } from "@/lib/csp";
 
 const PROTECTED_PREFIXES = ["/dashboard", "/sell", "/admin"];
 
@@ -10,10 +11,23 @@ const PROTECTED_PREFIXES = ["/dashboard", "/sell", "/admin"];
  * enforced again in each page/action and by the database.
  */
 export async function updateSession(request: NextRequest) {
-  let response = NextResponse.next({ request });
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  if (!url || !key) return response;
+
+  // Per-request CSP nonce: Next.js reads it from the request header and
+  // applies it to framework scripts; the response header enforces it.
+  const nonce = createNonce();
+  const csp = buildCsp(nonce, url);
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-nonce", nonce);
+  requestHeaders.set("Content-Security-Policy", csp);
+  const withCsp = (res: NextResponse) => {
+    res.headers.set("Content-Security-Policy", csp);
+    return res;
+  };
+
+  let response = NextResponse.next({ request: { headers: requestHeaders } });
+  if (!url || !key) return withCsp(response);
 
   const supabase = createServerClient<Database>(url, key, {
     cookies: {
@@ -22,7 +36,9 @@ export async function updateSession(request: NextRequest) {
       },
       setAll(cookiesToSet, headers) {
         for (const { name, value } of cookiesToSet) request.cookies.set(name, value);
-        response = NextResponse.next({ request });
+        // Forward refreshed cookies to Server Components alongside the CSP headers.
+        requestHeaders.set("cookie", request.cookies.toString());
+        response = NextResponse.next({ request: { headers: requestHeaders } });
         for (const { name, value, options } of cookiesToSet) response.cookies.set(name, value, options);
         for (const [header, value] of Object.entries(headers)) response.headers.set(header, value);
       },
@@ -38,7 +54,7 @@ export async function updateSession(request: NextRequest) {
     const redirect = request.nextUrl.clone();
     redirect.pathname = "/auth/login";
     redirect.search = `?next=${encodeURIComponent(path + request.nextUrl.search)}`;
-    return NextResponse.redirect(redirect);
+    return withCsp(NextResponse.redirect(redirect));
   }
-  return response;
+  return withCsp(response);
 }

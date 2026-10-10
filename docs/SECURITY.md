@@ -71,10 +71,16 @@ Server-side rate limits (`app_private.enforce_rate_limit`): messages 20/min and 
 
 ## Web hardening
 
-`X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`, `Strict-Transport-Security`; `poweredByHeader` off; redirects after auth only accept same-site relative paths; JSON-LD is escaped; notification links are restricted to relative paths by a check constraint. A Content-Security-Policy is **not yet** configured (see IMPLEMENTATION_STATUS).
+`X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`, `Strict-Transport-Security`; `poweredByHeader` off; redirects after auth only accept same-site relative paths; JSON-LD is escaped; notification links are restricted to relative paths by a check constraint.
+
+**Content-Security-Policy** (`src/lib/csp.ts`, set in `src/lib/supabase/proxy.ts`): a fresh nonce per request with `'strict-dynamic'` — no `unsafe-inline`/`unsafe-eval` for scripts in production. Next.js applies the nonce to its inline scripts automatically; `next-themes` receives it via `Providers`. Network access is limited to the site and the configured Supabase project (`https` + `wss` for Realtime); images to self, `data:`, `blob:` and Supabase Storage; `frame-ancestors 'none'`, `object-src 'none'`, `base-uri`/`form-action 'self'`. Styles allow `'unsafe-inline'` because Radix, sonner and next/image set inline style attributes. Any new third-party script, font, image or API host must be added in `buildCsp`. Static files excluded by the proxy matcher (images, `robots.txt`, `sitemap.xml`) are served without the header.
+
+## Internal helper privileges
+
+Postgres grants `EXECUTE` on new functions to `PUBLIC`, and a per-schema `ALTER DEFAULT PRIVILEGES … REVOKE` cannot remove that global default. Migration `1000` therefore revokes execute on **all** `app_private` functions from `public`, `anon` and `authenticated`, re-granting only `fail`, `slugify` and `random_key` (needed by invoker-rights triggers). `tests/db/maintenance.test.ts` asserts client roles cannot call privileged helpers.
 
 ## Adding new database objects safely
 
 - Enable RLS on every new table and `REVOKE ALL ... FROM anon, authenticated` before granting.
-- Supabase grants `EXECUTE` on new public functions to `anon`/`authenticated` by default: explicitly `REVOKE` and re-`GRANT` in the same migration.
+- Supabase grants `EXECUTE` on new public functions to `anon`/`authenticated` by default: explicitly `REVOKE` and re-`GRANT` in the same migration. New `app_private` functions must also be revoked from `public, anon, authenticated` explicitly.
 - Run `npm test` — the database suite applies every migration and catches regressions in policies.
