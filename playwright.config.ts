@@ -1,4 +1,8 @@
+import { existsSync } from "node:fs";
 import { defineConfig, devices } from "@playwright/test";
+
+// Test accounts and URLs live in the git-ignored .env.local (see docs/TESTING.md).
+if (existsSync(".env.local")) process.loadEnvFile(".env.local");
 
 /**
  * End-to-end tests run against a deployed or locally running instance that is

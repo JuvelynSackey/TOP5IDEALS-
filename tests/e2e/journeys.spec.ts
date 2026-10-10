@@ -16,7 +16,7 @@ let listingUrl = "";
 async function createListing(page: Page, listingTitle: string) {
   await page.goto("/sell");
   await page.getByLabel("Brand").selectOption({ label: "Apple" });
-  await page.getByLabel("Model").selectOption({ label: "iPhone 14 Pro" });
+  await page.getByRole("combobox", { name: /^Model/ }).selectOption({ label: "iPhone 14 Pro" });
   await page.getByLabel("Storage").selectOption({ label: "256GB" });
   await page.getByRole("button", { name: /Continue/ }).click();
   await page.getByRole("radio", { name: /Excellent/ }).click();
@@ -55,8 +55,9 @@ test("buyer searches, opens, saves and unsaves the listing", async ({ page }) =>
   await login(page, env.buyer, "/buy");
   await page.goto(`/buy?q=${encodeURIComponent(title)}`);
   await page.getByRole("link", { name: title }).click();
-  listingUrl = page.url();
+  await page.waitForURL(/\/phones\//);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(title);
+  listingUrl = page.url();
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.getByText("Saved to your favourites")).toBeVisible();
   await page.getByRole("button", { name: "Saved" }).click();
@@ -67,9 +68,9 @@ test("buyer messages the seller", async ({ page }) => {
   await login(page, env.buyer, listingUrl.replace(env.baseUrl!, ""));
   await page.getByRole("button", { name: "Message" }).first().click();
   await expect(page).toHaveURL(/\/dashboard\/messages\//);
-  await page.getByLabel("Message").fill("Hello, is the iPhone still available?");
+  await page.getByRole("textbox", { name: "Message", exact: true }).fill("Hello, is the iPhone still available?");
   await page.getByRole("button", { name: "Send message" }).click();
-  await expect(page.getByText("Hello, is the iPhone still available?")).toBeVisible();
+  await expect(page.getByText("Hello, is the iPhone still available?").first()).toBeVisible();
 });
 
 test("buyer makes a swap offer with cash; seller counters; buyer accepts; both confirm and review", async ({ browser }) => {

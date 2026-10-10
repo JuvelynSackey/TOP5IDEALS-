@@ -14,7 +14,8 @@ test("landing page communicates buy, sell and swap", async ({ page }) => {
 test("search runs against the database and filters are reflected in the URL", async ({ page }) => {
   await page.goto("/buy?q=iphone&condition=excellent&sort=price_asc");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("iphone");
-  await expect(page.getByText(/phones? found|No phones|phone/i).first()).toBeVisible();
+  const results = page.getByRole("region", { name: "Results" });
+  await expect(results.getByText(/^(No phones found|[\d,]+ phones?)$/)).toBeVisible();
 });
 
 test("protected areas redirect anonymous visitors to log in", async ({ page }) => {

@@ -13,7 +13,7 @@ Legend: **Verified** = covered by automated tests that were executed and passed.
 | `npm test` (unit + database) | ✅ 108 passed (27 unit, 81 database); 1 integration suite skipped (no test project) |
 | `npm run build` (Next 16.4, Turbopack) | ✅ 50 routes compiled |
 | Production server smoke test (placeholder Supabase) | ✅ static/auth pages 200; `/dashboard`, `/sell`, `/admin` → 307 to login; invalid listing/shop/profile URLs → 404; security headers present |
-| `npx playwright test --list` | ✅ 24 tests discovered (12 per device project) — **not executed** (no test project / base URL) |
+| Playwright vs staging (production build) | ✅ 17 passed: 10 public tests on desktop + mobile; 7 journeys on desktop (listing with photo → moderation → search/save → messaging → swap with cash, counteroffer, acceptance, double confirmation, mutual reviews → blocked conversation access → report). Journeys run desktop-only because they consume data. |
 
 ## Staging verification (hosted Supabase, 2026-10-10)
 
@@ -21,6 +21,7 @@ Legend: **Verified** = covered by automated tests that were executed and passed.
 - Anonymous API probes: private tables and admin RPCs return `permission denied`; `search_listings` works.
 - Manual run: sign-up, profile completion, admin role, listing creation with photo upload, self-moderation correctly refused, approval, public listing page and home page.
 - Migration 1100 (private listing images) applied: the storage server refuses public access to the bucket; `/media/listings/…` serves the live listing's photo (200, public cache), unknown and malformed paths 404, and `/_next/image` optimises it.
+- End-to-end run found and fixed a real accessibility bug: the asking-price label was attached to a wrapper `div` (duplicate `id="price"`), so the input had no accessible name. Now uses `PrefixedInput`. Other fixes in that run were test-locator issues.
 - Found and fixed: the listing detail query was ambiguous through PostgREST (`listings → brands` via `brand_id` and via `listing_swap_brands`, error PGRST201). All 21 embedded queries in the app were then probed against the live API and parse correctly. PGlite tests cannot catch this class of bug because they bypass PostgREST.
 
 ## Completion criteria
@@ -49,7 +50,7 @@ Legend: **Verified** = covered by automated tests that were executed and passed.
 | Primary controls meaningful | Implemented | Every button calls a server action/RPC or navigates |
 | Mobile & desktop | Implemented | Mobile-first layouts, bottom nav, sticky listing bar; overflow E2E test written, not run |
 | Loading, empty, error states | Implemented | `loading.tsx` (buy, dashboard, admin), empty states, `error.tsx`, `not-found.tsx` |
-| Automated tests cover critical workflows | Partial | DB/unit executed; E2E + concurrency written but blocked on test project |
+| Automated tests cover critical workflows | Mostly done | DB/unit + 17 browser tests executed on staging; real-Postgres concurrency test still needs `TEST_*` credentials |
 | Type/lint/build documented | Done | This file |
 | Deployment docs reflect implementation | Done | docs/DEPLOYMENT.md |
 

@@ -1,5 +1,9 @@
 import { defineConfig } from "vitest/config";
 import { fileURLToPath } from "node:url";
+import { existsSync } from "node:fs";
+
+// Integration tests read their staging settings from the git-ignored .env.local.
+if (existsSync(".env.local")) process.loadEnvFile(".env.local");
 
 export default defineConfig({
   resolve: {

@@ -15,7 +15,8 @@ export async function login(page: Page, who: { email?: string; password?: string
   await page.getByLabel("Email").fill(who.email!);
   await page.getByLabel("Password").fill(who.password!);
   await page.getByRole("button", { name: "Log in" }).click();
-  await expect(page).not.toHaveURL(/\/auth\/login/);
+  // Generous: a dev server compiles the destination page on first visit.
+  await expect(page).not.toHaveURL(/\/auth\/login/, { timeout: 30_000 });
 }
 
 export async function logout(page: Page) {
