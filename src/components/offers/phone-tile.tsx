@@ -17,7 +17,7 @@ export function PhoneTile({
   const body = (
     <>
       <span className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-2">
-        {url ? <Image src={url} alt="" fill sizes="64px" className="object-cover" /> : <Smartphone className="size-5 text-muted" aria-hidden="true" />}
+        {url ? <Image src={url} alt="" fill sizes="64px" className="object-cover" unoptimized /> : <Smartphone className="size-5 text-muted" aria-hidden="true" />}
       </span>
       <span className="min-w-0">
         <span className="block text-xs font-medium uppercase tracking-wide text-muted">{caption}</span>

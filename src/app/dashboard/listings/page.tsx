@@ -105,7 +105,7 @@ export default async function MyListingsPage({ searchParams }: { searchParams: P
               <div className="flex gap-3">
                 <div className="relative size-20 shrink-0 overflow-hidden rounded-lg bg-surface-2">
                   {cover ? (
-                    <Image src={listingImageUrl(cover.storage_path)!} alt="" fill sizes="80px" className="object-cover" />
+                    <Image src={listingImageUrl(cover.storage_path)!} alt="" fill sizes="80px" className="object-cover" unoptimized />
                   ) : (
                     <Smartphone className="absolute left-1/2 top-1/2 size-6 -translate-x-1/2 -translate-y-1/2 text-muted" aria-hidden="true" />
                   )}

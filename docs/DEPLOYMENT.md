@@ -27,7 +27,7 @@ or paste `supabase/seed.sql` into the SQL editor. Re-running updates rows by slu
 
 ## 4. Storage
 
-Buckets `listing-images`, `avatars`, `business-logos` (public) and `verification-docs` (private) plus their policies are created by migration `0900`. Verify under **Storage**: sizes 5 MB / 2 MB / 2 MB / 10 MB and allowed MIME types.
+Buckets `avatars`, `business-logos` (public), `listing-images` and `verification-docs` (private) plus their policies are created by migrations `0900` and `1100`. Listing photos are served by the app at `/media/listings/…`, not by public Storage URLs. Verify under **Storage**: sizes 5 MB / 2 MB / 2 MB / 10 MB and allowed MIME types.
 
 Orphaned listing images (uploaded but never linked, e.g. abandoned uploads) can be listed by an admin with `select * from public.list_orphaned_listing_images('1 day');` and removed via the Storage API or dashboard.
 

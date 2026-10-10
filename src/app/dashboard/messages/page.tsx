@@ -41,7 +41,7 @@ export default async function MessagesPage() {
                 </div>
                 {image ? (
                   <span className="relative hidden size-11 shrink-0 overflow-hidden rounded-md bg-surface-2 sm:block">
-                    <Image src={image} alt="" fill sizes="44px" className="object-cover" />
+                    <Image src={image} alt="" fill sizes="44px" className="object-cover" unoptimized />
                   </span>
                 ) : c.listing_id ? (
                   <Smartphone className="hidden size-5 text-muted sm:block" aria-hidden="true" />

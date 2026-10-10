@@ -58,7 +58,7 @@ function Thumb({ path, empty }: { path: string | null; empty?: boolean }) {
   const url = listingImageUrl(path);
   return (
     <span className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-2">
-      {url ? <Image src={url} alt="" fill sizes="56px" className="object-cover" /> : empty ? <span className="text-lg font-semibold text-muted">GH₵</span> : <Smartphone className="size-5 text-muted" aria-hidden="true" />}
+      {url ? <Image src={url} alt="" fill sizes="56px" className="object-cover" unoptimized /> : empty ? <span className="text-lg font-semibold text-muted">GH₵</span> : <Smartphone className="size-5 text-muted" aria-hidden="true" />}
     </span>
   );
 }

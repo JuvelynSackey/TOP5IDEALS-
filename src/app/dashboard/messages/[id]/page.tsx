@@ -58,7 +58,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
       {listing ? (
         <Link href={listingPath(listing.slug, listing.slug_key)} className="flex items-center gap-3 rounded-xl border border-border bg-surface p-2.5 hover:border-border-strong">
           <span className="relative size-11 shrink-0 overflow-hidden rounded-md bg-surface-2">
-            {cover ? <Image src={listingImageUrl(cover)!} alt="" fill sizes="44px" className="object-cover" /> : null}
+            {cover ? <Image src={listingImageUrl(cover)!} alt="" fill sizes="44px" className="object-cover" unoptimized /> : null}
           </span>
           <span className="min-w-0 flex-1">
             <span className="block truncate text-sm font-medium">{listing.title}</span>

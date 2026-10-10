@@ -10,7 +10,7 @@ Legend: **Verified** = covered by automated tests that were executed and passed.
 | --- | --- |
 | `npm run typecheck` (strict TS) | ✅ 0 errors |
 | `npm run lint` | ✅ 0 errors, 1 warning (React Compiler skips memoising a component using React Hook Form `watch` — expected) |
-| `npm test` (unit + database) | ✅ 103 passed (27 unit, 76 database); 1 integration suite skipped (no test project) |
+| `npm test` (unit + database) | ✅ 108 passed (27 unit, 81 database); 1 integration suite skipped (no test project) |
 | `npm run build` (Next 16.4, Turbopack) | ✅ 50 routes compiled |
 | Production server smoke test (placeholder Supabase) | ✅ static/auth pages 200; `/dashboard`, `/sell`, `/admin` → 307 to login; invalid listing/shop/profile URLs → 404; security headers present |
 | `npx playwright test --list` | ✅ 24 tests discovered (12 per device project) — **not executed** (no test project / base URL) |
@@ -20,6 +20,7 @@ Legend: **Verified** = covered by automated tests that were executed and passed.
 - `supabase db push` applied all 10 migrations to the staging project without errors; `--include-seed` loaded 12 brands and 73 models.
 - Anonymous API probes: private tables and admin RPCs return `permission denied`; `search_listings` works.
 - Manual run: sign-up, profile completion, admin role, listing creation with photo upload, self-moderation correctly refused, approval, public listing page and home page.
+- Migration 1100 (private listing images) applied: the storage server refuses public access to the bucket; `/media/listings/…` serves the live listing's photo (200, public cache), unknown and malformed paths 404, and `/_next/image` optimises it.
 - Found and fixed: the listing detail query was ambiguous through PostgREST (`listings → brands` via `brand_id` and via `listing_swap_brands`, error PGRST201). All 21 embedded queries in the app were then probed against the live API and parse correctly. PGlite tests cannot catch this class of bug because they bypass PostgREST.
 
 ## Completion criteria
@@ -59,7 +60,7 @@ Legend: **Verified** = covered by automated tests that were executed and passed.
 3. **Offer expiry** runs every 15 minutes via `pg_cron` (migration 1000) on Supabase; verified only for the no-`pg_cron` path locally — confirm `cron.job` on staging.
 4. **Phone-number login** not implemented (email/password only; stated on the login form).
 5. **Search typo tolerance** not implemented (prefix matching on normalised tokens only). Brand counts on the homepage scan up to 2,000 live listings.
-6. **Listing images** are in a public bucket; unpublished images are unguessable but not access-controlled. Consider signed URLs for drafts.
+6. **Listing images** are private (migration 1100) and served through `/media/listings/…` with per-visitor access checks; verified on staging. Public photos can remain in CDN/optimiser caches for a short time after a takedown.
 7. **Content-Security-Policy** is nonce-based and verified on the built server (all inline scripts carry the nonce); styles still allow `'unsafe-inline'`. Must be re-checked in a browser against live Supabase (Realtime `wss`, Storage images).
 8. **Account deletion** flow not implemented. Users with negotiation history cannot be hard-deleted (FK `RESTRICT` protects history); use suspension/anonymisation.
 9. **Verification documents** cannot be deleted by the user after upload (by design, private); removing one from the form only stops it being submitted.

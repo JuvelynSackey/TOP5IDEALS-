@@ -15,6 +15,8 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   images: {
     formats: ["image/avif", "image/webp"],
+    // Listing photos are served by our own route; only that path may be optimised, without query strings.
+    localPatterns: [{ pathname: "/media/listings/**", search: "" }],
     remotePatterns: supabaseHost
       ? [{ protocol: "https", hostname: supabaseHost, pathname: "/storage/v1/object/public/**" }]
       : [],

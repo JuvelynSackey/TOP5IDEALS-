@@ -98,7 +98,7 @@ export default async function ListingPage({ params }: Params) {
           name: listing.title,
           brand: { "@type": "Brand", name: listing.brands?.name },
           model: modelName,
-          image: images.map((i) => i.url),
+          image: images.map((i) => `${getSiteUrl()}${i.url}`),
           description: listing.description || undefined,
           offers: {
             "@type": "Offer",
@@ -137,7 +137,7 @@ export default async function ListingPage({ params }: Params) {
 
       <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
         <div className="min-w-0 space-y-8">
-          <Gallery images={images} title={listing.title} />
+          <Gallery images={images} title={listing.title} unoptimized={!isPublic} />
 
           <section aria-labelledby="specs-heading">
             <h2 id="specs-heading" className="mb-3 text-lg font-semibold">

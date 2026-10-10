@@ -140,7 +140,7 @@ export function PhotoManager({
         {images.map((img, i) => (
           <li key={img.id} className={cn("overflow-hidden rounded-xl border bg-surface", img.isPrimary ? "border-accent" : "border-border")}>
             <div className="relative aspect-square bg-surface-2">
-              <Image src={listingImageUrl(img.storagePath)!} alt={`Photo ${i + 1}`} fill sizes="(max-width: 640px) 50vw, 200px" className="object-cover" />
+              <Image src={listingImageUrl(img.storagePath)!} alt={`Photo ${i + 1}`} fill sizes="(max-width: 640px) 50vw, 200px" className="object-cover" unoptimized />
               {img.isPrimary ? (
                 <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-md bg-accent px-2 py-0.5 text-xs font-semibold text-accent-foreground">
                   <Star className="size-3" aria-hidden="true" /> Cover

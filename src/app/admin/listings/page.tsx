@@ -64,7 +64,7 @@ export default async function AdminListingsPage({ searchParams }: { searchParams
               {[...l.listing_images].sort((a, b) => a.position - b.position).map((img) => (
                 <li key={img.storage_path} className="relative size-24 shrink-0 overflow-hidden rounded-lg bg-surface-2">
                   <a href={listingImageUrl(img.storage_path)!} target="_blank" rel="noreferrer">
-                    <Image src={listingImageUrl(img.storage_path)!} alt="Listing photo" fill sizes="96px" className="object-cover" />
+                    <Image src={listingImageUrl(img.storage_path)!} alt="Listing photo" fill sizes="96px" className="object-cover" unoptimized />
                   </a>
                 </li>
               ))}

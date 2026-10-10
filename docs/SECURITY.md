@@ -42,13 +42,13 @@ Every rule in this table is exercised by `tests/db/*.test.ts` running as the rea
 
 | Bucket | Public read | Write rule |
 | --- | --- | --- |
-| `listing-images` (5 MB, jpeg/png/webp) | yes | insert only into `<own uid>/<own editable listing id>/…`; delete own files |
+| `listing-images` (5 MB, jpeg/png/webp) | **no** — served by `/media/listings/…` | insert only into `<own uid>/<own editable listing id>/…`; delete own files; read: anyone if the listing is public, otherwise owner, staff and parties to an offer/transaction involving it (`can_read_listing_image`, migration 1100) |
 | `avatars`, `business-logos` (2 MB) | yes | insert/delete only under `<own uid>/` |
 | `verification-docs` (10 MB, + pdf) | **no** | insert under `<own uid>/`; read by owner and admins only; admins view via 2-minute signed URLs |
 
 There are **no UPDATE policies**, and paths are random, so nobody can overwrite anyone's file (including their own). Linking an image to a listing (`add_listing_image`) verifies path shape, ownership of the object (`owner_id`), and listing ownership/editability. Images are re-encoded in the browser (max 1600 px, WebP/JPEG), which strips EXIF/GPS metadata.
 
-**Known trade-off:** listing images are in a public bucket so the CDN can serve them. Images of drafts or rejected listings are not linked anywhere public, but are reachable by anyone who knows the random path. Signed URLs for unpublished images would close this gap (see IMPLEMENTATION_STATUS).
+**Listing photo delivery:** the route `src/app/media/listings/[...path]/route.ts` first downloads the file anonymously (succeeds only for public listings → `Cache-Control: public, max-age=300, s-maxage=600`), then as the signed-in visitor (→ `private, no-store`), otherwise 404. Paths are validated against `<uuid>/<uuid>/<random>.<ext>`. Because Next's image optimiser does not forward cookies, non-public contexts (sell wizard, dashboards, admin queue, offer history, messages, the detail page of an unpublished listing) render with `unoptimized`. After a takedown, shared caches may serve the old photo for up to ~10 minutes and the optimiser cache for its TTL; the listing itself disappears immediately.
 
 ## Transaction integrity
 
