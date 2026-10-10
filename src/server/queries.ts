@@ -146,7 +146,7 @@ export async function getListingByKey(key: string) {
   const { data: listing, error } = await supabase
     .from("listings")
     .select(
-      "*, brands(name, slug), phone_models(name, slug, battery_health_supported), regions(name, slug), listing_images(id, storage_path, position, is_primary, width, height), listing_swap_brands(brand_id, brands(name))",
+      "*, brands!listings_brand_id_fkey(name, slug), phone_models(name, slug, battery_health_supported), regions(name, slug), listing_images(id, storage_path, position, is_primary, width, height), listing_swap_brands(brand_id, brands(name))",
     )
     .eq("slug_key", key)
     .maybeSingle();
