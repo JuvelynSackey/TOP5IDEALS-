@@ -67,6 +67,19 @@ const SUPABASE_STUBS = /* sql */ `
   grant all on storage.objects, storage.buckets to anon, authenticated, service_role;
   grant execute on function storage.foldername(text) to anon, authenticated, service_role;
 
+  -- pg_net stand-in: records outgoing requests; tests insert responses.
+  create schema net;
+  create table net._test_requests (id bigint generated always as identity primary key, url text, body jsonb, headers jsonb);
+  create table net._http_response (id bigint primary key, status_code integer, content text, error_msg text, timed_out boolean default false, created timestamptz default now());
+  create function net.http_post(url text, body jsonb default '{}', params jsonb default '{}', headers jsonb default '{}', timeout_milliseconds integer default 5000)
+  returns bigint language sql as $$
+    insert into net._test_requests (url, body, headers) values (url, body, headers) returning id
+  $$;
+
+  -- Supabase Vault stand-in.
+  create schema vault;
+  create table vault.decrypted_secrets (name text primary key, decrypted_secret text);
+
   grant usage on schema public to anon, authenticated, service_role;
   alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
   alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;

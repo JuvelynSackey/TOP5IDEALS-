@@ -106,31 +106,59 @@ const GROUPS: { label: string; types: NotificationType[] }[] = [
   { label: "Verification & reports", types: ["verification_update", "report_update"] },
 ];
 
-export function NotificationPreferences({ initial }: { initial: Partial<Record<NotificationType, { inApp: boolean; email: boolean }>> }) {
+export function NotificationPreferences({
+  initial,
+  email,
+}: {
+  initial: Partial<Record<NotificationType, { inApp: boolean; email: boolean }>>;
+  email: string | null;
+}) {
   const [state, setState] = useState(() =>
-    Object.fromEntries(GROUPS.map((g) => [g.label, initial[g.types[0]!]?.inApp ?? true])) as Record<string, boolean>,
+    Object.fromEntries(
+      GROUPS.map((g) => [g.label, { inApp: initial[g.types[0]!]?.inApp ?? true, email: initial[g.types[0]!]?.email ?? false }]),
+    ) as Record<string, { inApp: boolean; email: boolean }>,
   );
   const [pending, startTransition] = useTransition();
+  const toggle = (label: string, channel: "inApp" | "email", value: boolean) =>
+    setState((s) => ({ ...s, [label]: { ...s[label]!, [channel]: value } }));
   const save = () =>
     startTransition(async () => {
-      const prefs = GROUPS.flatMap((g) => g.types.map((type) => ({ type, inApp: state[g.label] ?? true, email: false })));
+      const prefs = GROUPS.flatMap((g) => g.types.map((type) => ({ type, inApp: state[g.label]?.inApp ?? true, email: state[g.label]?.email ?? false })));
       const r = await saveNotificationPreferencesAction(prefs);
       if (!r.ok) toast.error(r.error);
       else toast.success(r.message ?? "Saved");
     });
   return (
     <div className="space-y-3">
-      <ul className="divide-y divide-border rounded-xl border border-border bg-surface">
-        {GROUPS.map((g) => (
-          <li key={g.label} className="flex items-center justify-between gap-4 p-4">
-            <label htmlFor={`pref-${g.label}`} className="text-sm font-medium">
-              {g.label}
-            </label>
-            <Switch id={`pref-${g.label}`} checked={state[g.label]} onCheckedChange={(v) => setState((s) => ({ ...s, [g.label]: v }))} />
-          </li>
-        ))}
-      </ul>
-      <p className="text-xs text-muted">In-app notifications only. Email, SMS and WhatsApp alerts are not available yet.</p>
+      <div className="overflow-hidden rounded-xl border border-border bg-surface">
+        <div className="grid grid-cols-[1fr_auto_auto] gap-4 border-b border-border px-4 py-2 text-xs font-medium text-muted" aria-hidden="true">
+          <span>Notify me about</span>
+          <span className="w-11 text-center">In app</span>
+          <span className="w-11 text-center">Email</span>
+        </div>
+        <ul className="divide-y divide-border">
+          {GROUPS.map((g, i) => (
+            <li key={g.label} className="grid grid-cols-[1fr_auto_auto] items-center gap-4 px-4 py-3">
+              <span className="text-sm font-medium" id={`pref-label-${i}`}>
+                {g.label}
+              </span>
+              <Switch
+                checked={state[g.label]?.inApp}
+                onCheckedChange={(v) => toggle(g.label, "inApp", v)}
+                aria-label={`${g.label}: in-app notifications`}
+              />
+              <Switch
+                checked={state[g.label]?.email}
+                onCheckedChange={(v) => toggle(g.label, "email", v)}
+                aria-label={`${g.label}: email notifications`}
+              />
+            </li>
+          ))}
+        </ul>
+      </div>
+      <p className="text-xs text-muted">
+        Emails go to {email ? <span className="font-medium text-foreground">{email}</span> : "your sign-in address"}. SMS and WhatsApp alerts are not available yet.
+      </p>
       <Button onClick={save} loading={pending}>
         Save preferences
       </Button>

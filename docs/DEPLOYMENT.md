@@ -46,6 +46,24 @@ Orphaned listing images (uploaded but never linked, e.g. abandoned uploads) can 
 
 **Email provider.** Supabase's built-in SMTP is heavily rate-limited and for testing only. Configure a custom SMTP provider (e.g. Resend, Postmark, Amazon SES) under **Authentication → SMTP**. Keep "Confirm email" enabled. Set Auth rate limits under **Authentication → Rate limits**.
 
+## 5b. Email with Mailtrap
+
+**Account emails (sign-up confirmation, password reset)** are sent by Supabase Auth. In Mailtrap → *Email Testing* → your inbox → *Integration → SMTP*, copy host, port, username and password. In Supabase → **Authentication → Emails → SMTP Settings**, enable custom SMTP and enter them, with sender name `Top5Ideals` and any sender address. Then switch **Confirm email** back on. On staging, Email Testing (sandbox) captures every message in the Mailtrap inbox and never delivers it.
+
+**Notification emails** are sent by the database (migration 1200): a `pg_cron` job (`top5-send-emails`, every minute) posts queued emails to Mailtrap's HTTP API through `pg_net` and records the result (2xx → sent; otherwise retried, failed after 5 attempts).
+
+1. Mailtrap → **API Tokens** → create a token with access to the inbox. Store it in Vault from the SQL editor (never in code or `.env`):
+   ```sql
+   select vault.create_secret('<your-mailtrap-token>', 'mailtrap_api_token');
+   ```
+2. In the app, **Admin → Settings**, set `email_api_url`:
+   - staging (sandbox): `https://sandbox.api.mailtrap.io/api/send/<inbox_id>` (the inbox id is in the inbox URL)
+   - production (Email Sending, verified domain): `https://send.api.mailtrap.io/api/send`
+3. Set `email_from_address` (production: an address on your verified domain), `email_from_name` and `site_url` (used for links in emails).
+4. Users opt in per notification group under **Dashboard → Notifications → Email**.
+
+Check delivery with `select status, attempts, last_error from public.notification_deliveries order by created_at desc limit 20;`. To rotate the token: `select vault.update_secret((select id from vault.secrets where name = 'mailtrap_api_token'), '<new-token>');`.
+
 ## 6. First administrator
 
 ```sql
@@ -65,6 +83,7 @@ Migration `1000` enables `pg_cron` (available on Supabase) and registers:
 | --- | --- | --- |
 | `top5-expire-offers` | every 15 min | `public.expire_due_offers()` — expires overdue offers and notifies both parties |
 | `top5-prune-rate-limits` | daily 03:17 UTC | deletes rate-limit events older than 2 days |
+| `top5-send-emails` | every minute | sends queued notification emails (migration 1200; idle until configured) |
 
 Verify after `db push` with `select jobname, schedule, active from cron.job;` and inspect runs in `cron.job_run_details`. If `pg_cron` is unavailable the migration logs a notice and offers still expire lazily (accept/counter refuse expired offers; dashboards sweep overdue offers on load).
 

@@ -30,7 +30,7 @@ export default async function NotificationsPage() {
           <h2 id="prefs-heading" className="mb-3 text-lg font-semibold">
             Preferences
           </h2>
-          <NotificationPreferences initial={initial} />
+          <NotificationPreferences initial={initial} email={viewer.email} />
         </section>
       </div>
     </>

@@ -163,23 +163,31 @@ export function ModelForm({
   );
 }
 
-export function SettingRow({ settingKey, description, value }: { settingKey: string; description: string; value: boolean | number }) {
+export function SettingRow({ settingKey, description, value }: { settingKey: string; description: string; value: boolean | number | string }) {
   const { pending, run } = useSubmit();
   const [v, setV] = useState(String(value));
   const isBool = typeof value === "boolean";
+  const isText = typeof value === "string";
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4 sm:flex-row sm:items-center sm:justify-between">
-      <div>
+      <div className="min-w-0">
         <p className="font-mono text-sm font-medium">{settingKey}</p>
         <p className="text-sm text-muted">{description}</p>
       </div>
       <div className="flex items-center gap-2">
         {isBool ? (
           <Switch checked={v === "true"} onCheckedChange={(c) => setV(String(c))} aria-label={settingKey} />
+        ) : isText ? (
+          <Input className="w-full sm:w-80" value={v} onChange={(e) => setV(e.target.value)} aria-label={settingKey} />
         ) : (
           <Input className="w-24" inputMode="numeric" value={v} onChange={(e) => setV(e.target.value)} aria-label={settingKey} />
         )}
-        <Button variant="outline" size="sm" loading={pending} onClick={() => run(() => updateSettingAction(settingKey, isBool ? v === "true" : Number(v)))}>
+        <Button
+          variant="outline"
+          size="sm"
+          loading={pending}
+          onClick={() => run(() => updateSettingAction(settingKey, isBool ? v === "true" : isText ? v.trim() : Number(v)))}
+        >
           Save
         </Button>
       </div>

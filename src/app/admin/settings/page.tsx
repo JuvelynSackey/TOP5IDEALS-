@@ -13,7 +13,7 @@ export default async function AdminSettingsPage() {
       {error ? <Alert tone="danger">Could not load settings.</Alert> : null}
       <div className="space-y-3">
         {(data ?? []).map((s) => (
-          <SettingRow key={s.key} settingKey={s.key} description={s.description} value={typeof s.value === "boolean" ? s.value : Number(s.value)} />
+          <SettingRow key={s.key} settingKey={s.key} description={s.description} value={typeof s.value === "boolean" || typeof s.value === "string" ? s.value : Number(s.value)} />
         ))}
       </div>
     </>

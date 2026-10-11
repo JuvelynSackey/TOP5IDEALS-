@@ -52,7 +52,7 @@ There are **no UPDATE policies**, and paths are random, so nobody can overwrite 
 
 ## Transaction integrity
 
-- Acceptance locks all involved listing rows (`FOR UPDATE`, ordered by id to avoid deadlocks), re-checks eligibility and inserts into `listing_reservations` whose **primary key** prevents a listing ever being reserved twice — even if two requests race.
+- Acceptance locks all involved listing rows **before** the offer row (`FOR UPDATE`, ordered by id) — the same listing → offer order used by every other path — then re-checks eligibility and inserts into `listing_reservations` whose **primary key** prevents a listing ever being reserved twice — even if two requests race.
 - When a listing becomes non-offerable, a trigger cancels every open offer involving it (with an audit event).
 - Counter/accept use expected-version checks; offers carry idempotency keys; messages carry client ids → retries never duplicate.
 - Negotiation history, confirmations and agreed terms are immutable (triggers reject `UPDATE`/`DELETE` even from the table owner).
@@ -74,6 +74,10 @@ Server-side rate limits (`app_private.enforce_rate_limit`): messages 20/min and 
 `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`, `Strict-Transport-Security`; `poweredByHeader` off; redirects after auth only accept same-site relative paths; JSON-LD is escaped; notification links are restricted to relative paths by a check constraint.
 
 **Content-Security-Policy** (`src/lib/csp.ts`, set in `src/lib/supabase/proxy.ts`): a fresh nonce per request with `'strict-dynamic'` — no `unsafe-inline`/`unsafe-eval` for scripts in production. Next.js applies the nonce to its inline scripts automatically; `next-themes` receives it via `Providers`. Network access is limited to the site and the configured Supabase project (`https` + `wss` for Realtime); images to self, `data:`, `blob:` and Supabase Storage; `frame-ancestors 'none'`, `object-src 'none'`, `base-uri`/`form-action 'self'`. Styles allow `'unsafe-inline'` because Radix, sonner and next/image set inline style attributes. Any new third-party script, font, image or API host must be added in `buildCsp`. Static files excluded by the proxy matcher (images, `robots.txt`, `sitemap.xml`) are served without the header.
+
+## Email delivery secret
+
+The Mailtrap API token lives only in Supabase Vault (`mailtrap_api_token`) and is read by `app_private.email_api_token()` inside the database. It is never in the repository, environment files or the browser. Outgoing requests are made by `pg_net`, whose request and response tables are not exposed to API roles. Email bodies are built from notification text with HTML escaping (`app_private.html_escape`, tested against script injection). Users only receive email for groups they opted into.
 
 ## Internal helper privileges
 

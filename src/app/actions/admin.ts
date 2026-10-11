@@ -168,6 +168,11 @@ export async function updateSettingAction(key: string, value: unknown): Promise<
     offer_expiry_hours: z.number().int().min(1).max(720),
     confirmation_window_days: z.number().int().min(1).max(60),
     review_edit_window_days: z.number().int().min(0).max(90),
+    // Empty turns email off; otherwise an https endpoint (e.g. Mailtrap).
+    email_api_url: z.union([z.literal(""), z.url({ protocol: /^https$/ })]),
+    email_from_address: z.email(),
+    email_from_name: z.string().min(1).max(60),
+    site_url: z.url({ protocol: /^https?$/ }).refine((u) => !u.endsWith("/"), { error: "No trailing slash." }),
   };
   const schema = schemas[key];
   if (!schema || !schema.safeParse(value).success) return fail("validation_failed", "Invalid setting value.");
