@@ -156,6 +156,7 @@ describe("security helpers", () => {
     const leaked = fromDbError({ code: "XX000", message: 'relation "secret_table" does not exist' });
     expect(leaked.error).not.toMatch(/secret_table/);
     expect(fromDbError({ code: "42501", message: "permission denied for table profiles" }).code).toBe("forbidden");
+    expect(fromDbError({ code: "40P01", message: "deadlock detected" })).toMatchObject({ code: "conflict", error: expect.stringMatching(/try again/) });
   });
 
   it("redacts sensitive fields in logs", () => {

@@ -72,6 +72,8 @@ export function fromDbError(error: DbErrorLike, fallback = "Something went wrong
   }
   if (MESSAGES[code]) return { ok: false, code, error: MESSAGES[code] };
   if (error.code === "23505") return { ok: false, code: "duplicate", error: "That already exists." };
+  // Lock conflicts between simultaneous requests: nothing was saved, so retrying is safe.
+  if (error.code === "40P01" || error.code === "40001") return { ok: false, code: "conflict", error: "Someone else acted on this at the same moment. Please try again." };
   if (error.code === "42501") return { ok: false, code: "forbidden", error: MESSAGES.forbidden! };
   if (error.code === "23514") return { ok: false, code: "validation_failed", error: MESSAGES.validation_failed! };
   return { ok: false, code: "unknown", error: fallback };

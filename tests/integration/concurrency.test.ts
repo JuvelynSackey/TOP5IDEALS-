@@ -44,11 +44,15 @@ describe.skipIf(!configured)("concurrent acceptance on real Postgres", () => {
       seller.rpc("accept_swap_offer", { p_offer_id: b.data!, p_expected_version: 1 }),
     ]);
     const succeeded = results.filter((r) => !r.error);
-    expect(succeeded).toHaveLength(1);
-    expect(results.find((r) => r.error)?.error?.message).toMatch(/listing_unavailable|offer_closed/);
-
-    // Clean up so the test can be re-run: cancel the transaction (releases the listing).
-    const txId = succeeded[0]!.data!;
-    await seller.rpc("cancel_transaction", { p_transaction_id: txId, p_reason: "integration test cleanup" });
+    try {
+      expect(succeeded).toHaveLength(1);
+      // The loser must get a clean business error — never a deadlock (40P01).
+      expect(results.find((r) => r.error)?.error?.message).toMatch(/^(listing_unavailable|offer_closed)$/);
+    } finally {
+      // Always release the listing so a failed run can't leave it reserved.
+      for (const winner of succeeded) {
+        await seller.rpc("cancel_transaction", { p_transaction_id: winner.data!, p_reason: "integration test cleanup" });
+      }
+    }
   });
 });
