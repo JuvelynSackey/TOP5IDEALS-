@@ -1,0 +1,27 @@
+# Render Blueprint for Top5Ideals (secondary deployment; Vercel is the main site).
+# Render → New → Blueprint → pick this repository. Render asks for the values
+# marked `sync: false` during setup; they are never stored in this file.
+services:
+  - type: web
+    name: top5ideals
+    runtime: node
+    region: frankfurt # nearest Render region to Supabase eu-west-1 (Dublin)
+    plan: free # sleeps after ~15 minutes idle; first request then takes up to a minute
+    branch: master
+    autoDeploy: true
+    buildCommand: npm ci && npm run build
+    startCommand: npm start # `next start` listens on the PORT Render provides
+    healthCheckPath: /robots.txt
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
+      # NEXT_PUBLIC_* values are baked in at build time: set them before the first deploy.
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      # The main (Vercel) address, so canonical links and auth redirects point there.
+      - key: NEXT_PUBLIC_SITE_URL
+        sync: false

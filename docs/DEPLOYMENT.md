@@ -87,15 +87,42 @@ Migration `1000` enables `pg_cron` (available on Supabase) and registers:
 
 Verify after `db push` with `select jobname, schedule, active from cron.job;` and inspect runs in `cron.job_run_details`. If `pg_cron` is unavailable the migration logs a notice and offers still expire lazily (accept/counter refuse expired offers; dashboards sweep overdue offers on load).
 
-## 8. Vercel
+## 8. Hosting: Vercel (main) and Render (secondary)
 
-1. Import the repository. Framework preset: Next.js. Node 20+.
-2. Environment variables (Production and Preview):
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-   - `NEXT_PUBLIC_SITE_URL` = `https://<your-domain>` (omit on Preview to use `VERCEL_URL`)
-3. Build command `npm run build`, output default. The build does not need database access (pages are dynamic; the sitemap falls back to static entries if the database is unreachable at build time).
-4. Point previews at a **staging** Supabase project, never production.
+The same app can run on both. **Vercel is the main address**: set `NEXT_PUBLIC_SITE_URL` to the Vercel address on *both* hosts so canonical links, the sitemap and auth redirects point there. Both connect to the same Supabase project. `NEXT_PUBLIC_*` values are baked in at build time, so set them **before** the first build and redeploy after changing them.
+
+Environment variables (both hosts):
+
+| Variable | Value |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase Project URL |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable / anon key |
+| `NEXT_PUBLIC_SITE_URL` | `https://<main-domain>` (no trailing slash) |
+
+### Vercel
+
+`vercel.json` pins the framework and runs functions in `dub1` (Dublin), next to Supabase `eu-west-1`.
+
+1. vercel.com → **Add New → Project** → import the GitHub repository.
+2. Framework preset: Next.js (detected). Build and output settings: leave the defaults.
+3. Add the three environment variables (Production and Preview), then **Deploy**.
+4. After the first deploy, copy the address (e.g. `https://top5ideals.vercel.app`), set it as `NEXT_PUBLIC_SITE_URL` if you used a placeholder, and **Redeploy**.
+
+### Render
+
+`render.yaml` is a Blueprint: Node 22, region `frankfurt`, `npm ci && npm run build`, `npm start`, health check `/robots.txt`, auto-deploy from `master`.
+
+1. render.com → **New → Blueprint** → connect the GitHub repository.
+2. Render reads `render.yaml` and asks for the three `sync: false` variables. Enter them, then **Apply**.
+3. The free plan sleeps after ~15 minutes without traffic; the next visit can take up to a minute. Paid plans stay awake.
+
+### Supabase settings for hosted addresses
+
+In **Authentication → URL Configuration**:
+- Site URL: the main (Vercel) address.
+- Redirect URLs: for each host, `https://<host>/auth/callback` and `https://<host>/auth/confirm` (keep the `localhost:3000` entries for development).
+
+Optionally set the admin setting `site_url` to the main address (used for links in notification emails).
 
 ## 9. Local development
 
